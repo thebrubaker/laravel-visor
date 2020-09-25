@@ -1,7 +1,16 @@
 {
   "name": "thebrubaker/laravel-visor",
   "description": "An dead-simple Docker runner for new Laravel applications.",
-  "require": {},
+  "keywords": [
+    "laravel"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Joel Brubaker",
+      "email": "contact@joelbrubaker.com"
+    }
+  ],
   "bin": [
     "bin/visor"
   ]
