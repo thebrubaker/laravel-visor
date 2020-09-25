@@ -22,7 +22,6 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
-	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -43,8 +42,8 @@ to quickly create a Cobra application.`,
 			log.Fatal(err)
 		}
 		// Get Ports
-		databasePortOpen, databasePort := getAvailablePort(3306, 6306)
 		appPortOpen, appPort := getAvailablePort(80, 8080)
+		databasePortOpen, databasePort := getAvailablePort(3306, 6306)
 
 		if !appPortOpen || !databasePortOpen {
 			log.Fatal("💥 Could not get access to any port after trying several options")
@@ -116,14 +115,14 @@ func init() {
 }
 
 func getAvailablePort(desiredPort int, backupPort int) (portIsOpen bool, openPort int) {
-	conn, err := net.DialTimeout("tcp", net.JoinHostPort("127.0.0.1", strconv.Itoa(desiredPort)), time.Second)
+	conn, err := net.Listen("tcp", net.JoinHostPort("0.0.0.0", strconv.Itoa(desiredPort)))
 	if err == nil {
 		conn.Close()
 		return true, desiredPort
 	}
 	maxPort := backupPort + 10
 	for backupPort <= maxPort {
-		conn, err := net.Listen("tcp", fmt.Sprintf(":%s", strconv.Itoa(backupPort)))
+		conn, err := net.Listen("tcp", net.JoinHostPort("0.0.0.0", strconv.Itoa(backupPort)))
 		if err == nil {
 			conn.Close()
 			return true, backupPort

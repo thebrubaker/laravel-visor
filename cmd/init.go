@@ -16,6 +16,13 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
+	"log"
+	"os"
+	"os/exec"
+	"time"
+
+	"github.com/briandowns/spinner"
 	"github.com/spf13/cobra"
 )
 
@@ -36,14 +43,34 @@ to quickly create a Cobra application.`,
 
 func init() {
 	rootCmd.AddCommand(initCmd)
+}
 
-	// Here you will define your flags and configuration settings.
+func initVisor() {
+	if commandNotExists("docker") {
+		log.Fatal("💥 Docker is not installed on this machine")
+	}
+	if err := appendToFileIfMissing(".gitignore", ".visor"); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.Mkdir(".visor", 0755); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("")
+	fmt.Println("👌 Docker is installed")
+	fmt.Println("👌 Created .visor directory and added to .gitignore")
+	fmt.Println("")
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// initCmd.PersistentFlags().String("foo", "", "A help for foo")
+	fmt.Println("👉 downloading containers for php 7.4, redis 4.0 and mysql 5.7...")
+	s := spinner.New(spinner.CharSets[36], 100*time.Millisecond) // Build our new spinner
+	s.Start()
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// initCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	exec.Command("docker", "pull", "lorisleiva/laravel-docker").Run()
+	exec.Command("docker", "pull", "mysql:5.7").Run()
+	exec.Command("docker", "pull", "redis:4.0-alpine").Run()
+
+	s.Stop()
+
+	fmt.Println("")
+	fmt.Println("👌 Visor init success!")
+	fmt.Println("")
 }

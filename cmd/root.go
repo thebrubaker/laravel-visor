@@ -18,13 +18,10 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
-	"time"
 
-	"github.com/briandowns/spinner"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 
@@ -71,38 +68,8 @@ func init() {
 	// when this action is called directly.
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Verbose mode")
 
-	initVisor()
-}
-
-func initVisor() {
 	if directoryNotExists(".visor") && askInitVisor() {
-		if commandNotExists("docker") {
-			log.Fatal("💥 Docker is not installed on this machine")
-		}
-		if err := appendToFileIfMissing(".gitignore", ".visor"); err != nil {
-			log.Fatal(err)
-		}
-		if err := os.Mkdir(".visor", 0755); err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println("")
-		fmt.Println("👌 Docker is installed")
-		fmt.Println("👌 Created .visor directory and added to .gitignore")
-		fmt.Println("")
-
-		fmt.Println("👉 downloading containers for php 7.4, redis 4.0 and mysql 5.7...")
-		s := spinner.New(spinner.CharSets[36], 100*time.Millisecond) // Build our new spinner
-		s.Start()
-
-		exec.Command("docker", "pull", "lorisleiva/laravel-docker").Run()
-		exec.Command("docker", "pull", "mysql:5.7").Run()
-		exec.Command("docker", "pull", "redis:4.0-alpine").Run()
-
-		s.Stop()
-
-		fmt.Println("")
-		fmt.Println("👌 Visor init success!")
-		fmt.Println("")
+		initVisor()
 	}
 }
 
