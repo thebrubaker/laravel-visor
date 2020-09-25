@@ -1,27 +1,45 @@
 ## About Visor
 
-Visor is a dead simple way to manage your next Laravel project locally and into production. This tool optimizes for a simple setup and sane-defaults.
+Visor is a quick and simple way to get your next Laravel project running locally with Docker.
 
-- One command to run a local Laravel application from scratch
-- One command to set up google cloud run (free tier)
-- One command to deploy to production
-- One command to ssh into a production server
+To get started, just install it with composer: `composer require thebrubaker/laravel-visor`
+
+After visor is installed, run `/vendor/bin/visor up` to spin up your application and database.
+
+Tip: If you already understand how to set up a docker-compose.yaml file, then this tool might be too simple for your use case.
 
 ```bash
 visor up
 visor down
-visor cloud init
-visor cloud build
-visor cloud deploy
-visor cloud exec
-visor cloud info
+visor migrate
+visor tinker
 ```
 
 ### Requirements
 
-This tool requires Docker and runs on Mac / Linux / Windows w/ WSL2.
+This tool requires Docker and should run on Mac / Linux / Windows w/ WSL2.
 
-## First Time Setup
+## Visor Up
+
+```
+👉 running composer install...
+👉 spinning up services...
+
+💪 run `visor migrate` to migrate your database
+💪 run `visor down` to spin down your application and services
+💪 run `visor tinker` to jump into a php container
+
+👌 Applicaton available at http://localhost:8080
+👌 Database available at mysql://root:secret@127.0.0.1:3306/laravel_visor
+```
+
+## Visor Down
+
+```
+👉 spinning down services...
+```
+
+## Visor Init
 
 ```
 It looks like this is your first time running Visor. Proceed with visor init? (Y/n)
@@ -34,45 +52,29 @@ It looks like this is your first time running Visor. Proceed with visor init? (Y
 👌 Visor init success!
 ```
 
-## Errors
+## Visor Errors
 
 ```
 💥 Docker is not installed on this machine
+
+Visor requires Docker to continue. Have you installed Docker on your machine?
+
+💥 Unable to acquire DB_PORT=3306 from your .env file.
+
+Visor exposes a mysql database on the port listed in your .env file. Please update DB_PORT to one available on your machine and try again.
+
+💥 A docker-compose.yaml file already exists for this project.
+
+Visor is a simple wrapper for docker-compose. Do you want us to backup your docker-compose config and replace it with Visor's config?
+
+💥 Unable to access your application at http://localhost:8080
+
+Visor attempted to spin up your application on port 8080. Was this port already taken?
+
+💥 Unable to access your database at mysql://root:secret@127.0.0.1:3306/laravel_visor
+
+Visor attempted to spin up your database on port 3306. Was this port already taken?
 ```
-
-## Visor Up
-
-```
-👉 spinning up services...
-👉 running composer install...
-
-💪 run `visor migrate` to migrate your database
-💪 run `visor down` to spin down your application and services
-💪 run `visor tinker` to jump into the php container
-
-👌 Applicaton available at http://localhost:8080
-👌 Database available at mysql://root:secret@127.0.0.1:3306/laravel_visor
-```
-
-## Visor Down
-
-Tasks
-
-- Check if docker-compose file exists
-- Run docker-compose down
-
-## Visor Init
-
-Tasks
-
-- Check if gcloud SDK is installed
-- Ask user for services to be created
-- Create Project
-- Create Cloud Run
-- Create Compute Instance
-- Create Storage Bucket
-- Create .env.prod file in repo
-- Add .env.prod to .gitignore
 
 ## Visor Build
 
@@ -88,3 +90,16 @@ Tasks
 - Build docker image w/ tag
 - Upload docker image w/ tag
 - Trigger update to Cloud Run
+
+## Goals
+
+- Run a local Laravel application from scratch
+- Set up google cloud run (free tier)
+- Deploy to google cloud run
+- Access via ssh into a production server
+
+```
+visor cloud init
+visor cloud build
+visor cloud deploy
+```
