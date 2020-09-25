@@ -16,14 +16,15 @@ limitations under the License.
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 
@@ -90,10 +91,14 @@ func initVisor() {
 		fmt.Println("")
 
 		fmt.Println("👉 downloading containers for php 7.4, redis 4.0 and mysql 5.7...")
+		s := spinner.New(spinner.CharSets[36], 100*time.Millisecond) // Build our new spinner
+		s.Start()
 
 		exec.Command("docker", "pull", "lorisleiva/laravel-docker").Run()
 		exec.Command("docker", "pull", "mysql:5.7").Run()
 		exec.Command("docker", "pull", "redis:4.0-alpine").Run()
+
+		s.Stop()
 
 		fmt.Println("")
 		fmt.Println("👌 Visor init success!")
@@ -188,21 +193,10 @@ func replaceFile(name string, contents []byte) error {
 }
 
 func askInitVisor() bool {
-	validate := func(input string) error {
-		switch input {
-		case "y":
-		case "yes":
-		case "n":
-		case "no":
-		case "":
-			return nil
-		}
-		return errors.New("Please enter y/n")
-	}
-
 	prompt := promptui.Prompt{
-		Label:    "It looks like this is your first time running Visor. Proceed with visor init? (Y/n)",
-		Validate: validate,
+		Label:     "It looks like this is your first time running Visor. Proceed with visor init?",
+		IsConfirm: true,
+		Default:   "y",
 	}
 
 	result, err := prompt.Run()
