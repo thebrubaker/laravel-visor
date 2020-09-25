@@ -1,5 +1,8 @@
 {
   "name": "thebrubaker/laravel-visor",
   "description": "An dead-simple Docker runner for new Laravel applications.",
-  "require": {}
+  "require": {},
+  "bin": [
+    "bin/visor"
+  ]
 }
