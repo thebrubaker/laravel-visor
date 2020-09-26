@@ -2,11 +2,21 @@
 
 Visor is a quick and simple way to get your next Laravel project running locally with Docker.
 
-Install Visor globally with composer: `composer global require thebrubaker/laravel-visor:dev-main`
+Install Visor globally with composer:
 
-After Visor is installed, go into your application directory and run `visor up`
+```bash
+composer global require thebrubaker/laravel-visor:dev-main
+```
+
+After Visor is installed, go into your application directory and run
+
+```
+visor up
+```
 
 Tip: If you already understand how to set up a docker-compose.yaml file, then this tool might be too simple for your use case.
+
+## Visor Commands
 
 ```bash
 visor up # spin up application
@@ -16,7 +26,7 @@ visor tinker # jump into php container
 visor compose ...args # run docker-compose commands (flags not supported yet)
 ```
 
-### Requirements
+## Requirements
 
 This tool requires Docker and should run on Mac / Linux / Windows w/ WSL2.
 
