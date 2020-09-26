@@ -18,10 +18,12 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
 
+	"github.com/joho/godotenv"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 
@@ -34,13 +36,8 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "laravel-visor",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "A simple tool for spinning up new Laravel applications",
+	Long:  `Visor is a quick and simple way to get your next Laravel project running locally with Docker.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//	Run: func(cmd *cobra.Command, args []string) { },
@@ -68,9 +65,24 @@ func init() {
 	// when this action is called directly.
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Verbose mode")
 
+	if commandNotExists("docker") {
+		fmt.Println("")
+		fmt.Println("💥 Docker is not installed on this machine")
+		fmt.Println("")
+		os.Exit(1)
+	}
+
+	if !dockerIsRunning() {
+		fmt.Println("")
+		fmt.Println("💥 Docker is not currently running")
+		fmt.Println("")
+		os.Exit(1)
+	}
+
 	if directoryNotExists(".visor") && askInitVisor() {
 		initVisor()
 	}
+
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -91,12 +103,28 @@ func initConfig() {
 		viper.SetConfigName(".laravel-visor")
 	}
 
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	viper.AutomaticEnv() // read in environment variables that match
+
+	// Bind Values
+	viper.BindEnv("database.port", "DB_PORT")
+	viper.BindEnv("database.database", "DB_DATABASE")
+	viper.BindEnv("database.username", "DB_USERNAME")
+	viper.BindEnv("database.password", "DB_PASSWORD")
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
+}
+
+func dockerIsRunning() bool {
+	err := exec.Command("docker", "info").Run()
+	return err == nil
 }
 
 func appendToFileIfMissing(path string, text string) error {

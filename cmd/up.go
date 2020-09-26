@@ -24,6 +24,7 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // upCmd represents the up command
@@ -43,19 +44,24 @@ to quickly create a Cobra application.`,
 		}
 		// Get Ports
 		appPortOpen, appPort := getAvailablePort(80, 8080)
-		databasePortOpen, databasePort := getAvailablePort(3306, 6306)
+		databasePortOpen, databasePort := getAvailablePort(viper.GetInt("database.port"), 6306)
 
 		if !appPortOpen || !databasePortOpen {
-			log.Fatal("💥 Could not get access to any port after trying several options")
+			fmt.Println("💥 Could not get access to any port after trying several options")
+			os.Exit(0)
 		}
 
 		// Docker-Compose File
-		if fileNotExists("docker-compose.yaml") && fileNotExists("docker-compose.yml") {
-			contents := []byte(getDockerCompose(appPort, databasePort))
-			if err := replaceFile(".visor/docker-compose.yaml", contents); err != nil {
-				log.Println(err)
-				log.Fatal("💥 Could not write docker-compose.yaml file")
-			}
+		contents := []byte(getDockerCompose(appPort, databasePort))
+		if err := replaceFile(".visor/docker-compose.yaml", contents); err != nil {
+			log.Println(err)
+			log.Fatal("💥 Could not write .visor/docker-compose.yaml")
+		}
+
+		contents = []byte(getServerConfig())
+		if err := replaceFile(".visor/default.conf", contents); err != nil {
+			log.Println(err)
+			log.Fatal("💥 Could not write visor/default.conf")
 		}
 
 		// Docker-Compose Services Running
@@ -69,29 +75,34 @@ to quickly create a Cobra application.`,
 		// } else {
 		// 	logs = append(logs, "👌 Visor services already running")
 		// }
-
-		fmt.Println("")
-		fmt.Println("👉 running composer install...")
-		command := exec.Command("docker-compose", "--project-directory", ".", "--file", ".visor/docker-compose.yaml", "run", "--rm", "php", "composer", "install")
-
-		if verbose {
+		//
+		if directoryNotExists("vendor") {
 			fmt.Println("")
-			command.Stdout = os.Stdout
-			command.Stderr = os.Stderr
-		}
+			fmt.Println("👉 running composer install...")
+			install := exec.Command("docker-compose", "--project-directory", ".", "--file", ".visor/docker-compose.yaml", "run", "--rm", "php", "composer", "install")
 
-		command.Run()
+			if verbose {
+				fmt.Println("")
+				install.Stdout = os.Stdout
+				install.Stderr = os.Stderr
+			}
+
+			install.Run()
+		}
 
 		fmt.Println("👉 spinning up services...")
-		command = exec.Command("docker-compose", "--project-directory", ".", "--file", ".visor/docker-compose.yaml", "up", "-d")
+		up := exec.Command("docker-compose", "--project-directory", ".", "--file", ".visor/docker-compose.yaml", "up", "-d")
 
 		if verbose {
 			fmt.Println("")
-			command.Stdout = os.Stdout
-			command.Stderr = os.Stderr
+			up.Stdout = os.Stdout
+			up.Stderr = os.Stderr
 		}
 
-		command.Run()
+		up.Run()
+
+		appConnectionString := getAppConnectionString(appPort)
+		databaseConnectionString := getDatabaseConnectionString(databasePort)
 
 		// Print Tasks
 		fmt.Println("")
@@ -99,8 +110,8 @@ to quickly create a Cobra application.`,
 		fmt.Println("💪 run `visor down` to spin down your application and services")
 		fmt.Println("💪 run `visor tinker` to jump into the php container")
 		fmt.Println("")
-		fmt.Printf("👌 Applicaton available at http://localhost:%s\n", strconv.Itoa(appPort))
-		fmt.Printf("👌 Database available at mysql://root@127.0.0.1:%s/laravel_visor\n", strconv.Itoa(databasePort))
+		fmt.Printf("👌 Applicaton available at %s\n", appConnectionString)
+		fmt.Printf("👌 Database available at %s\n", databaseConnectionString)
 	},
 }
 
@@ -112,6 +123,14 @@ func init() {
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	// upCmd.PersistentFlags().String("foo", "", "A help for foo")
+}
+
+func getAppConnectionString(port int) string {
+	return fmt.Sprintf("http://localhost:%s", strconv.Itoa(port))
+}
+
+func getDatabaseConnectionString(port int) string {
+	return fmt.Sprintf("mysql://root@127.0.0.1:%s/%s", strconv.Itoa(port), viper.GetString("database.database"))
 }
 
 func getAvailablePort(desiredPort int, backupPort int) (portIsOpen bool, openPort int) {
@@ -135,33 +154,78 @@ func getAvailablePort(desiredPort int, backupPort int) (portIsOpen bool, openPor
 func getDockerCompose(apptPort int, databasePort int) string {
 	return fmt.Sprintf(`version: "3"
 services:
+  nginx:
+    image: nginx:alpine
+    tty: true
+    ports:
+      - "%s:80"
+    volumes:
+      - ./public:/var/www/public
+      - ./.visor/default.conf:/etc/nginx/conf.d/default.conf
   php:
-    image: lorisleiva/laravel-docker
+    image: cyberduck/php-fpm-laravel:7.4
     volumes:
       - ./:/var/www/
     environment:
       - "DB_HOST=mysql"
       - "DB_DATABASE=${DB_DATABASE}"
-      - "DB_USERNAME=${DB_USERNAME}"
-      - "DB_PASSWORD=${DB_PASSWORD}"
+      - "DB_PORT=3306"
+      - "DB_USERNAME=root"
+      - "DB_PASSWORD="
       - "REDIS_HOST=redis"
-      - "REDIS_PORT=${REDIS_PORT}"
-    command: php artisan serve --host=0.0.0.0 --port=80
-    ports:
-      - %s:80
+      - "REDIS_PORT=6379"
+    tty: true
+    expose:
+      - 9000
+    command: php-fpm
   mysql:
     image: mysql:5.7
     volumes:
       - mysqldata:/var/lib/mysql
     environment:
+      - "MYSQL_ALLOW_EMPTY_PASSWORD=true"
       - "MYSQL_DATABASE=${DB_DATABASE}"
-      - "MYSQL_USER=${DB_USERNAME}"
-      - "MYSQL_PASSWORD=${DB_PASSWORD}"
     ports:
       - "%s:3306"
   redis:
     image: redis:4.0-alpine
-    command: redis-server --appendonly yes  --port ${REDIS_PORT}
+    command: redis-server --appendonly yes
 volumes:
-  mysqldata:`, strconv.Itoa(apptPort), strconv.Itoa(databasePort))
+  mysqldata:
+`, strconv.Itoa(apptPort), strconv.Itoa(databasePort))
+}
+
+func getServerConfig() string {
+	return `server {
+    listen 80;
+    server_name example.com;
+    root /var/www/public;
+
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-XSS-Protection "1; mode=block";
+    add_header X-Content-Type-Options "nosniff";
+
+    index index.php;
+
+    charset utf-8;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    error_page 404 /index.php;
+
+    location ~ \.php$ {
+        fastcgi_pass php:9000;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}`
 }

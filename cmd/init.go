@@ -46,9 +46,6 @@ func init() {
 }
 
 func initVisor() {
-	if commandNotExists("docker") {
-		log.Fatal("💥 Docker is not installed on this machine")
-	}
 	if err := appendToFileIfMissing(".gitignore", ".visor"); err != nil {
 		log.Fatal(err)
 	}
