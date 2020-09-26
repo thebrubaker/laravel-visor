@@ -33,7 +33,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		command := exec.Command("docker-compose", "--project-directory", ".", "--file", ".visor/docker-compose.yaml", "run", "--rm", "php", "php", "artisan", "migrate")
+		command := exec.Command("docker-compose", "--project-directory", ".", "--file", ".visor/docker-compose.yaml", "exec", "php", "php", "artisan", "migrate")
 
 		command.Stdout = os.Stdout
 		command.Stderr = os.Stderr
