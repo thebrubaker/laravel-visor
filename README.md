@@ -5,7 +5,7 @@ Visor is a quick and simple way to get your next Laravel project running locally
 Install Visor globally with composer:
 
 ```bash
-composer global require thebrubaker/laravel-visor:dev-main
+composer global require thebrubaker/laravel-visor:dev-linux
 ```
 
 After Visor is installed, go into your application directory and run
