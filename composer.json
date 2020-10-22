@@ -1,8 +1,9 @@
 {
   "name": "thebrubaker/laravel-visor",
-  "description": "An dead-simple Docker runner for new Laravel applications.",
+  "description": "A dead-simple Docker runner for spinning up new Laravel applications.",
   "keywords": [
-    "laravel"
+    "laravel",
+    "visor"
   ],
   "license": "MIT",
   "authors": [
