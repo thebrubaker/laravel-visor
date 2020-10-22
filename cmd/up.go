@@ -30,13 +30,7 @@ import (
 // upCmd represents the up command
 var upCmd = &cobra.Command{
 	Use:   "up",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Spin up your application and related services",
 	Run: func(cmd *cobra.Command, args []string) {
 		verbose, err := cmd.Flags().GetBool("verbose")
 		if err != nil {
@@ -90,8 +84,31 @@ to quickly create a Cobra application.`,
 			install.Run()
 		}
 
-		fmt.Println("👉 spinning up services...")
-		up := exec.Command("docker-compose", "--project-directory", ".", "--file", ".visor/docker-compose.yaml", "up", "-d")
+		fmt.Println("👉 spinning up mysql...")
+
+		up := exec.Command("docker-compose", "--project-directory", ".", "--file", ".visor/docker-compose.yaml", "up", "-d", "mysql")
+
+		if verbose {
+			fmt.Println("")
+			up.Stdout = os.Stdout
+			up.Stderr = os.Stderr
+		}
+
+		up.Run()
+
+		fmt.Println("👉 spinning up your application...")
+
+		up = exec.Command("docker-compose", "--project-directory", ".", "--file", ".visor/docker-compose.yaml", "up", "-d", "php")
+
+		if verbose {
+			fmt.Println("")
+			up.Stdout = os.Stdout
+			up.Stderr = os.Stderr
+		}
+
+		up.Run()
+
+		up = exec.Command("docker-compose", "--project-directory", ".", "--file", ".visor/docker-compose.yaml", "up", "-d", "nginx")
 
 		if verbose {
 			fmt.Println("")

@@ -25,13 +25,7 @@ import (
 // composeCmd represents the compose command
 var composeCmd = &cobra.Command{
 	Use:   "compose",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Run any docker-compose command under the hood such as log or ps",
 	Run: func(cmd *cobra.Command, args []string) {
 		config := []string{"--project-directory", ".", "--file", ".visor/docker-compose.yaml"}
 		command := exec.Command("docker-compose", append(config, args...)...)
@@ -55,4 +49,5 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// composeCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	composeCmd.DisableFlagParsing = true
 }
