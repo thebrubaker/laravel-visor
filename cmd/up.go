@@ -59,9 +59,9 @@ to quickly create a Cobra application.`,
 		}
 
 		contents = []byte(getServerConfig())
-		if err := replaceFile(".visor/default.conf", contents); err != nil {
+		if err := replaceFile(".visor/laravel.conf", contents); err != nil {
 			log.Println(err)
-			log.Fatal("💥 Could not write visor/default.conf")
+			log.Fatal("💥 Could not write visor/laravel.conf")
 		}
 
 		// Docker-Compose Services Running
@@ -161,7 +161,7 @@ services:
       - "%s:80"
     volumes:
       - ./public:/var/www/public
-      - ./.visor/default.conf:/etc/nginx/conf.d/default.conf
+      - ./.visor/laravel.conf:/etc/nginx/conf.d/default.conf
   php:
     image: cyberduck/php-fpm-laravel:7.4
     volumes:
@@ -198,7 +198,7 @@ volumes:
 func getServerConfig() string {
 	return `server {
     listen 80;
-    server_name example.com;
+    server_name laravel;
     root /var/www/public;
 
     add_header X-Frame-Options "SAMEORIGIN";
