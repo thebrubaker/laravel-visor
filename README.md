@@ -18,8 +18,8 @@ Tip: If you are already familiar with Docker or Docker Compose, this tool is lik
 visor up # spin up application
 visor down # spin down application
 visor migrate # run migrations
-visor tinker # jump into php container
-visor compose ...args # run docker-compose commands (flags not supported yet)
+visor tinker # jump into your php container with a bash shell
+visor compose ...args # run docker-compose commands
 ```
 
 ## Requirements
