@@ -25,13 +25,7 @@ import (
 // tinkerCmd represents the tinker command
 var tinkerCmd = &cobra.Command{
 	Use:   "tinker",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Jump into the php container with a bash shell",
 	Run: func(cmd *cobra.Command, args []string) {
 		command := exec.Command("docker-compose", "--project-directory", ".", "--file", ".visor/docker-compose.yaml", "exec", "php", "bash")
 

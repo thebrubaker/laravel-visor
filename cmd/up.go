@@ -30,13 +30,7 @@ import (
 // upCmd represents the up command
 var upCmd = &cobra.Command{
 	Use:   "up",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Spin up your application and related services",
 	Run: func(cmd *cobra.Command, args []string) {
 		verbose, err := cmd.Flags().GetBool("verbose")
 		if err != nil {
@@ -59,9 +53,9 @@ to quickly create a Cobra application.`,
 		}
 
 		contents = []byte(getServerConfig())
-		if err := replaceFile(".visor/default.conf", contents); err != nil {
+		if err := replaceFile(".visor/laravel.conf", contents); err != nil {
 			log.Println(err)
-			log.Fatal("💥 Could not write visor/default.conf")
+			log.Fatal("💥 Could not write visor/laravel.conf")
 		}
 
 		// Docker-Compose Services Running
@@ -90,8 +84,31 @@ to quickly create a Cobra application.`,
 			install.Run()
 		}
 
-		fmt.Println("👉 spinning up services...")
-		up := exec.Command("docker-compose", "--project-directory", ".", "--file", ".visor/docker-compose.yaml", "up", "-d")
+		fmt.Println("👉 spinning up mysql...")
+
+		up := exec.Command("docker-compose", "--project-directory", ".", "--file", ".visor/docker-compose.yaml", "up", "-d", "mysql")
+
+		if verbose {
+			fmt.Println("")
+			up.Stdout = os.Stdout
+			up.Stderr = os.Stderr
+		}
+
+		up.Run()
+
+		fmt.Println("👉 spinning up your application...")
+
+		up = exec.Command("docker-compose", "--project-directory", ".", "--file", ".visor/docker-compose.yaml", "up", "-d", "php")
+
+		if verbose {
+			fmt.Println("")
+			up.Stdout = os.Stdout
+			up.Stderr = os.Stderr
+		}
+
+		up.Run()
+
+		up = exec.Command("docker-compose", "--project-directory", ".", "--file", ".visor/docker-compose.yaml", "up", "-d", "nginx")
 
 		if verbose {
 			fmt.Println("")
@@ -161,7 +178,7 @@ services:
       - "%s:80"
     volumes:
       - ./public:/var/www/public
-      - ./.visor/default.conf:/etc/nginx/conf.d/default.conf
+      - ./.visor/laravel.conf:/etc/nginx/conf.d/default.conf
   php:
     image: cyberduck/php-fpm-laravel:7.4
     volumes:
@@ -198,7 +215,7 @@ volumes:
 func getServerConfig() string {
 	return `server {
     listen 80;
-    server_name example.com;
+    server_name laravel;
     root /var/www/public;
 
     add_header X-Frame-Options "SAMEORIGIN";
